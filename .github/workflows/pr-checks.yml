@@ -79,7 +79,14 @@ jobs:
         with:
           node-version: '22'
 
-      # Start the backend and leave it running in the background (the "&" at the end)
+      # Same as the Dockerfile: build the admin app and put it inside the backend
+      - name: Build admin into backend (/backoffice)
+        working-directory: apps/admin
+        run: |
+          npm ci
+          npm run build
+          mkdir -p ../backend/src/main/resources/static/backoffice
+          cp -r dist/. ../backend/src/main/resources/static/backoffice/
       - name: Start backend
         working-directory: apps/backend
         run: |
