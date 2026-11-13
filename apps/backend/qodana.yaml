@@ -1,4 +1,4 @@
 version: "1.0"
-linter: jetbrains/qodana-jvm-community:2026.2
+linter: qodana-jvm-community
 projectJDK: "17"
 failThreshold: 0
