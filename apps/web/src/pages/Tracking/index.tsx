@@ -4,6 +4,7 @@ import { Check, ChefHat, Package, Truck, X } from "lucide-react";
 import { foodmeApi } from "@/api/foodme";
 import { Button } from "@/components/ui/button";
 import { formatAmd } from "@/lib/utils";
+import { StarRatingDisplay } from "@/components/sections/star-rating";
 import { useAuth } from "@/providers/auth-provider";
 
 const STEPS = [
@@ -205,6 +206,23 @@ export default function Tracking() {
           </div>
         </div>
       </div>
+
+      {/* R13: the customer's rating, once the order has been rated */}
+      {data.review && (
+        <div className="bezel-outer shadow-diffuse mt-5 animate-fade-up [animation-delay:180ms]">
+          <div className="bezel-inner p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-base font-bold text-zinc-900">Your rating</p>
+              <StarRatingDisplay value={data.review.rating} size={18} />
+            </div>
+            {data.review.comment && (
+              <p className="mt-2 whitespace-pre-line break-words text-sm leading-relaxed text-zinc-600">
+                {data.review.comment}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
