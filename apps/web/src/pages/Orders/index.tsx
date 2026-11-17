@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Package } from "lucide-react";
+import { ChevronRight, Package, Star } from "lucide-react";
 import { foodmeApi } from "@/api/foodme";
 import { Button } from "@/components/ui/button";
+import { RateOrderDialog } from "@/components/sections/rate-order-dialog";
+import { StarRatingDisplay } from "@/components/sections/star-rating";
 import { useAuth } from "@/providers/auth-provider";
 import { formatAmd } from "@/lib/utils";
+import type { FullOrderDto } from "@/types";
 
 const STATUS_LABEL: Record<string, string> = {
   NEW: "Received",
@@ -32,6 +36,7 @@ function formatOrderDate(value: string) {
 
 export default function Orders() {
   const { isAuthenticated, customer, logout } = useAuth();
+  const [orderToRate, setOrderToRate] = useState<FullOrderDto | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["my-orders", customer?.id],
@@ -120,9 +125,38 @@ export default function Orders() {
                   </div>
                 </div>
               </Link>
+              {/* R14/R15/R17: only delivered orders get a rating row, outside the link. */}
+              {order.status === "DELIVERED" && (
+                <div className="mt-2 flex min-h-8 items-center justify-end gap-2 px-2">
+                  {order.review ? (
+                    <>
+                      <span className="text-xs font-medium text-zinc-500">Your rating</span>
+                      <StarRatingDisplay value={order.review.rating} />
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setOrderToRate(order)}
+                      aria-label={`Rate order ${order.number}`}
+                    >
+                      <Star aria-hidden="true" />
+                      Rate order
+                    </Button>
+                  )}
+                </div>
+              )}
             </li>
           ))}
         </ul>
+      )}
+
+      {orderToRate && (
+        <RateOrderDialog
+          key={orderToRate.number}
+          order={orderToRate}
+          onClose={() => setOrderToRate(null)}
+        />
       )}
     </div>
   );

@@ -19,10 +19,51 @@ import {
     DialogActions,
     TextField,
     Stack,
+    Rating,
 } from '@mui/material';
 import { OrderStatus, OrderStatusColors, OrderStatusTransitions } from '../../constants/OrderStatus.jsx';
 import { updateOrderStatus } from '../../api/order-api.js';
 import BackButton from '../../layout/BackButton.jsx';
+
+const formatReviewDate = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+};
+
+/**
+ * TEST-11 (R20-R22): how the customer rated this order.
+ * Hidden for orders that are not delivered; "No review yet" when delivered but unrated.
+ */
+const CustomerReview = ({ status, review }) => {
+    if (status !== OrderStatus.DELIVERED) return null;
+    return (
+        <>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                Customer review
+            </Typography>
+            {review ? (
+                <Box data-testid="customer-review">
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        <Rating value={review.rating} max={5} readOnly aria-label={`${review.rating} out of 5 stars`} />
+                        <Typography variant="body2" color="text.secondary">
+                            {review.rating}/5 · {formatReviewDate(review.createdAt)}
+                        </Typography>
+                    </Stack>
+                    {review.comment && (
+                        // Rendered as plain text on purpose: customer input must never be injected as HTML.
+                        <Typography sx={{ mt: 1, whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>
+                            {review.comment}
+                        </Typography>
+                    )}
+                </Box>
+            ) : (
+                <Typography color="text.secondary">No review yet</Typography>
+            )}
+        </>
+    );
+};
 
 const OrderDetails = () => {
     const record = useRecordContext();
@@ -163,6 +204,8 @@ const OrderDetails = () => {
                     <Typography variant="h6">Total</Typography>
                     <Typography variant="h6">{record.totalPrice} AMD</Typography>
                 </Stack>
+
+                <CustomerReview status={record.status} review={record.review} />
 
                 {availableTransitions.length > 0 && (
                     <>
