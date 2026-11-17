@@ -31,7 +31,8 @@ if not isinstance(data, dict):
 
 findings = data.get("findings") or []
 count = {s: sum(1 for f in findings if str(f.get("severity", "")).lower() == s) for s in ("high", "medium", "low")}
-failed = count["high"] > 0 or data.get("verdict") == "FAIL"
+# fail closed: anything other than an explicit PASS (missing/odd verdict) fails too
+failed = count["high"] > 0 or data.get("verdict") != "PASS"
 
 status = "❌ FAIL" if failed else "✅ PASS"
 header = (f"**Quality gate: {status}** · {count['high']} high · {count['medium']} medium · {count['low']} low"

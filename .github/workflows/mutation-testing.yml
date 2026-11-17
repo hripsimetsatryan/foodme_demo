@@ -46,16 +46,20 @@ jobs:
           files="$(git diff --name-only --diff-filter=AM "origin/${{ github.base_ref }}...HEAD" -- \
             'apps/backend/src/main/java/am/foodme/backend/service/*.java' \
             'apps/backend/src/main/java/am/foodme/backend/utils/*.java' || true)"
-          classes="$(printf '%s\n' "$files" | sed -n 's#^apps/backend/src/main/java/##; s#\.java$#*#; s#/#.#gp' | paste -sd, -)"
+          # keep only valid Java class paths, so odd file names can never reach the shell
+          classes="$(printf '%s\n' "$files" | grep -E '^[A-Za-z0-9_/]+\.java$' \
+            | sed -n 's#^apps/backend/src/main/java/##; s#\.java$#*#; s#/#.#gp' | paste -sd, -)"
           echo "classes=$classes" >> "$GITHUB_OUTPUT"
           echo "Classes to mutate: ${classes:-<none>}"
 
       - name: Run PIT
         if: steps.targets.outputs.classes != ''
         working-directory: apps/backend
+        env:
+          PIT_CLASSES: ${{ steps.targets.outputs.classes }}   # via env, never interpolated into the script
         run: |
           chmod +x gradlew
-          ./gradlew pitest --no-daemon -PpitTargetClasses='${{ steps.targets.outputs.classes }}'
+          ./gradlew pitest --no-daemon "-PpitTargetClasses=$PIT_CLASSES"
 
       - name: Mutation report
         id: report
@@ -151,10 +155,14 @@ jobs:
 
       - name: Quality gate
         if: always()
+        env:
+          CLASSES: ${{ steps.targets.outputs.classes }}
+          PASSED: ${{ steps.report.outputs.passed }}
+          SCORE: ${{ steps.report.outputs.score }}
         run: |
-          if [ -z "${{ steps.targets.outputs.classes }}" ]; then echo "Nothing to mutate"; exit 0; fi
-          if [ "${{ steps.report.outputs.passed }}" != "true" ]; then
-            echo "::error::Mutation score ${{ steps.report.outputs.score }}% is below ${MUTATION_THRESHOLD}% (or PIT did not run)"
+          if [ -z "$CLASSES" ]; then echo "Nothing to mutate"; exit 0; fi
+          if [ "$PASSED" != "true" ]; then
+            echo "::error::Mutation score ${SCORE:-n/a}% is below ${MUTATION_THRESHOLD}% (or PIT did not run)"
             exit 1
           fi
-          echo "Mutation score ${{ steps.report.outputs.score }}% >= ${MUTATION_THRESHOLD}%"
+          echo "Mutation score ${SCORE}% >= ${MUTATION_THRESHOLD}%"
