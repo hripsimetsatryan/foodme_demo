@@ -62,8 +62,11 @@ public class OrderReviewService {
                 .filter(o -> o.getCustomer() != null && Objects.equals(o.getCustomer().getId(), customer.getId()))
                 .orElseThrow(() -> new NotFoundException("Order " + orderNumber + " not found"));
 
-        int rating = validateRating(request == null ? null : request.getRating());
-        String comment = normalizeComment(request == null ? null : request.getComment());
+        if (request == null) {
+            throw new BadRequestException(INVALID_RATING_MESSAGE);
+        }
+        int rating = validateRating(request.getRating());
+        String comment = normalizeComment(request.getComment());
 
         if (!DELIVERED.equals(order.getStatus())) {
             throw new BadRequestException(NOT_DELIVERED_MESSAGE); // R8
