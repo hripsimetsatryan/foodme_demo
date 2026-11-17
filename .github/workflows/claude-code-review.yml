@@ -40,7 +40,6 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}   # read-only use; the workflow posts the comment itself
-          show_full_output: true   # TEMP: debug first run
           prompt: |
             You are a senior reviewer for the FoodMe monorepo (Spring Boot backend in apps/backend,
             React+TS storefront in apps/web, React-Admin panel in apps/admin).
