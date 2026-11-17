@@ -156,7 +156,10 @@ async function orderWithReview(
     },
   });
   expect(createRes.ok()).toBeTruthy();
-  const order = await createRes.json();
+  const { number } = await createRes.json();
+  // The create response has no database id; the order details endpoint has it.
+  const order = await (await request.get(`${API}/api/order/number/${number}`)).json();
+  expect(order.id).toBeTruthy();
 
   if (opts.delivered) {
     const adminToken = await adminApiToken(request);

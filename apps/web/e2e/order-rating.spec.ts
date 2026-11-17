@@ -43,7 +43,11 @@ async function placeOrder(request: APIRequestContext, auth: Auth): Promise<Order
     },
   });
   expect(res.ok()).toBeTruthy();
-  return res.json();
+  const { number } = await res.json();
+  // The create response has no database id; the order details endpoint has it (admin API needs it).
+  const details = await request.get(`${API}/api/order/number/${number}`);
+  expect(details.ok()).toBeTruthy();
+  return details.json();
 }
 
 async function markDelivered(request: APIRequestContext, order: Order) {
