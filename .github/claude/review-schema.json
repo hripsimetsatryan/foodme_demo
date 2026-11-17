@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "required": ["verdict", "summary", "findings", "comment_markdown"],
+  "properties": {
+    "verdict": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "summary": { "type": "string" },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "title"],
+        "properties": {
+          "id": { "type": "string" },
+          "severity": { "type": "string", "enum": ["high", "medium", "low"] },
+          "category": { "type": "string" },
+          "location": { "type": "string" },
+          "title": { "type": "string" },
+          "detail": { "type": "string" },
+          "fix": { "type": "string" }
+        }
+      }
+    },
+    "comment_markdown": { "type": "string" }
+  }
+}

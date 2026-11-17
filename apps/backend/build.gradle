@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'info.solidsoft.pitest' version '1.15.0'   // mutation testing (CI step 5)
 }
 
 group = 'am.foodme'
@@ -66,3 +67,17 @@ dependencies {
        useJUnitPlatform { includeTags 'integration' }
        testLogging { events 'passed', 'failed', 'skipped' }
    }
+
+// Mutation testing with PIT: ./gradlew pitest -PpitTargetClasses=am.foodme.backend.service.OrderReviewService*
+// CI passes only the classes changed in the PR; unit tests only (integration-tagged tests are excluded).
+pitest {
+    pitestVersion = '1.15.8'
+    junit5PluginVersion = '1.2.1'
+    targetClasses = (project.findProperty('pitTargetClasses') ?: 'am.foodme.backend.service.*').toString().split(',').toList()
+    targetTests = ['am.foodme.backend.*']
+    excludedGroups = ['integration']
+    threads = 4
+    outputFormats = ['XML', 'HTML']
+    timestampedReports = false
+    failWhenNoMutations = false
+}
